@@ -31,21 +31,28 @@ console.log('Server running at http://127.0.0.1:8080/');
 
 var io = require('socket.io').listen(server), users = {};
 
-io.sockets.on('connection', function(socket){
+io.sockets.on('connection', function(socket) {
 
     console.log("Connection " + socket.id + " accepted.");
 
     socket.on('addUser', function (username) {
-    	socket.username = username;
-    	users[username] = true;
+    	if (!users[username]) {
+    		socket.username = username;
+    		users[username] = true; 
+    	} else {
+			socket.emit('invalidName');
+    	}
     });
 
-    socket.on('disconnect', function(){
+    socket.on('disconnect', function() {
         console.log("Connection " + socket.id + " terminated.");
-        io.sockets.emit('goodbye', socket.username);
+        if (socket.username) {
+        	io.sockets.emit('goodbye', socket.username);
+        	users[socket.username] = false;
+        }
     });
 
-    socket.on('message', function(message){
+    socket.on('message', function(message) {
 		console.log("Received message: " + message + " - from client " + socket.username);
 		io.sockets.emit('chat', socket.username, message);
 	});

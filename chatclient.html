@@ -19,10 +19,6 @@
         		$('.username').remove();
         	});
 
-        	socket.on('disconnect', function(){ $('#status').html('Disconnected from Server'); });
-        	socket.on('reconnecting', function( nextRetry ){ $('#status').html('Reconnecting in ' + nextRetry + ' milliseconds');  });
-        	socket.on('reconnect_failed', function(){ $('#status').html('Reconnect Failed'); });
-
         	socket.on('chat', function (client, message) { 
 	 			$('#messages').append('<b>'+ client + ' says:</b> ' + message + '<br>');
 			});
@@ -30,6 +26,15 @@
         	socket.on('goodbye', function (username) {
         		$('#messages').append('<b> '+ username + ' </b>has disconnected from the server <br>');
         	});
+
+        	socket.on('invalidName', function () {
+        		disconnect();
+        		$('#status').html('Username is already taken.');
+        	});
+
+        	socket.on('disconnect', function(){ $('#status').html('Disconnected from Server'); });
+        	socket.on('reconnecting', function( nextRetry ){ $('#status').html('Reconnecting in ' + nextRetry + ' milliseconds');  });
+        	socket.on('reconnect_failed', function(){ $('#status').html('Reconnect Failed'); });
 		}
 		
 		function disconnect() {
