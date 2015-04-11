@@ -9,29 +9,27 @@
 	
 	<script>
 	    var socket;
-		var firstconnect = true;
-		
-	    function connect() {
-			if(firstconnect) {
-	        	socket = io.connect(null);
-	
-	        	socket.on('connect', function(){ 
-	        		$('#status').html('Connected to Server'); 
-	        		$('.username').remove();
-	        	});
-	        	socket.on('disconnect', function(){ $('#status').html('Disconnected from Server'); });
-	        	socket.on('reconnecting', function( nextRetry ){ $('#status').html('Reconnecting in ' + nextRetry + ' milliseconds');  });
-	        	socket.on('reconnect_failed', function(){ $('#status').html('Reconnect Failed'); });
 
-	        	socket.on('chat', function (client, message) { 
-		 			$('#messages').append('<b> Client '+ client + ' says:</b> ' + message + '<br>');
-				});
-				
-				firstconnect = false;
-			}
-			else {
-				socket.socket.reconnect();
-			}
+	    function connect() {
+        	socket = io.connect(null);
+
+        	socket.on('connect', function(){ 
+        		socket.emit('addUser', $('#username').val());
+        		$('#status').html('Connected to Server'); 
+        		$('.username').remove();
+        	});
+
+        	socket.on('disconnect', function(){ $('#status').html('Disconnected from Server'); });
+        	socket.on('reconnecting', function( nextRetry ){ $('#status').html('Reconnecting in ' + nextRetry + ' milliseconds');  });
+        	socket.on('reconnect_failed', function(){ $('#status').html('Reconnect Failed'); });
+
+        	socket.on('chat', function (client, message) { 
+	 			$('#messages').append('<b>'+ client + ' says:</b> ' + message + '<br>');
+			});
+			
+        	socket.on('goodbye', function (username) {
+        		$('#messages').append('<b> '+ username + ' </b>has disconnected from the server <br>');
+        	});
 		}
 		
 		function disconnect() {
@@ -39,7 +37,8 @@
 		}
 		
 		function send() {
-		    socket.send($('#message').val());    
+		    socket.send($('#message').val()); 
+		    $('#message').val('');
 		};
 		
 	</script>

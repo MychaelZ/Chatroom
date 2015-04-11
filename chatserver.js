@@ -29,19 +29,25 @@ send404 = function(res){
 server.listen(8080, "127.0.0.1");
 console.log('Server running at http://127.0.0.1:8080/');
 
-var io = require('socket.io').listen(server);
+var io = require('socket.io').listen(server), users = {};
 
 io.sockets.on('connection', function(socket){
 
     console.log("Connection " + socket.id + " accepted.");
 
+    socket.on('addUser', function (username) {
+    	socket.username = username;
+    	users[username] = true;
+    });
+
     socket.on('disconnect', function(){
         console.log("Connection " + socket.id + " terminated.");
+        io.sockets.emit('goodbye', socket.username);
     });
 
     socket.on('message', function(message){
-		console.log("Received message: " + message + " - from client " + socket.id);
-		io.sockets.emit('chat', socket.id, message);
+		console.log("Received message: " + message + " - from client " + socket.username);
+		io.sockets.emit('chat', socket.username, message);
 	});
 
 });
