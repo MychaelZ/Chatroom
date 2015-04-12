@@ -40,6 +40,7 @@ io.sockets.on('connection', function(socket) {
     		socket.username = username;
     		users[username] = socket.id; 
     		socket.join('general');
+    		socket.room = 'general';
     		rooms.general[username] = username;
     		io.sockets.emit('addToList', users);
     	} else {
