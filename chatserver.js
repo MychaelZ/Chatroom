@@ -29,7 +29,7 @@ send404 = function(res){
 server.listen(8080, "127.0.0.1");
 console.log('Server running at http://127.0.0.1:8080/');
 
-var io = require('socket.io').listen(server), users = {};
+var io = require('socket.io').listen(server), users = {}, rooms = {general: {}};
 
 io.sockets.on('connection', function(socket) {
 
@@ -39,6 +39,8 @@ io.sockets.on('connection', function(socket) {
     	if (!users[username]) {
     		socket.username = username;
     		users[username] = socket.id; 
+    		socket.join('general');
+    		rooms.general[username] = username;
     		io.sockets.emit('addToList', users);
     	} else {
 			socket.emit('invalidName');
@@ -50,6 +52,8 @@ io.sockets.on('connection', function(socket) {
         if (socket.username) {
         	io.sockets.emit('goodbye', socket.username);
         	delete users[socket.username];
+        	delete rooms[socket.room][socket.username];
+        	socket.leave(socket.room);
         	io.sockets.emit('addToList', users);
         }
     });
@@ -57,8 +61,12 @@ io.sockets.on('connection', function(socket) {
     socket.on('message', function(message) {
 		console.log("Received message: " + message + " - from client " + socket.username);
 		if (message[0] === '@') {
-			var to = users[message.slice(1, message.indexOf(' '))];
-			io.sockets.emit('privateMessage', socket.username, to, socket.id, message);
+			var to = message.slice(1, message.indexOf(' '));
+			if (typeof rooms[to] === 'object') {
+				io.sockets.in(to).emit('chat', socket.username, message);
+			} else {
+				io.sockets.emit('privateMessage', socket.username, users[to], socket.id, message);
+			}
 		} else {
 			io.sockets.emit('chat', socket.username, message);
 		}
