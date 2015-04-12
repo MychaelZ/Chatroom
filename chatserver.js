@@ -38,7 +38,8 @@ io.sockets.on('connection', function(socket) {
     socket.on('addUser', function (username) {
     	if (!users[username]) {
     		socket.username = username;
-    		users[username] = true; 
+    		users[username] = socket.id; 
+    		io.sockets.emit('addToList', users);
     	} else {
 			socket.emit('invalidName');
     	}
@@ -48,13 +49,19 @@ io.sockets.on('connection', function(socket) {
         console.log("Connection " + socket.id + " terminated.");
         if (socket.username) {
         	io.sockets.emit('goodbye', socket.username);
-        	users[socket.username] = false;
+        	delete users[socket.username];
+        	io.sockets.emit('addToList', users);
         }
     });
 
     socket.on('message', function(message) {
 		console.log("Received message: " + message + " - from client " + socket.username);
-		io.sockets.emit('chat', socket.username, message);
+		if (message[0] === '@') {
+			var to = users[message.slice(1, message.indexOf(' '))];
+			io.sockets.emit('privateMessage', socket.username, to, socket.id, message);
+		} else {
+			io.sockets.emit('chat', socket.username, message);
+		}
 	});
 
 });

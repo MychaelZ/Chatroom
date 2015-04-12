@@ -2,7 +2,7 @@
 <html>
   <head>
     <title>Socket.io Chat</title>
-	<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+  	<script type="text/javascript" src="/socket.io/socket.io.js"></script>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
   </head>
   <body>
@@ -20,11 +20,18 @@
         	});
 
         	socket.on('chat', function (client, message) { 
-	 			$('#messages').append('<b>'+ client + ' says:</b> ' + message + '<br>');
+        		var template = '<b>'+ client + ' says:</b> ' + message + '<br>';
+	 			$('#messages').append(template);
 			});
 			
+        	socket.on('privateMessage', function (client, to, from, message) { 
+        		if (to === socket.id || from === socket.id) {
+        			$('#messages').append('<font color="red"><b>' + client + ' says:</b> ' + message + '</font><br>');
+        		}
+        	});
+
         	socket.on('goodbye', function (username) {
-        		$('#messages').append('<b> '+ username + ' </b>has disconnected from the server <br>');
+        		$('#messages').append('<b> '+ username + '</b> has disconnected from the server <br>');
         	});
 
         	socket.on('invalidName', function () {
@@ -32,8 +39,15 @@
         		$('#status').html('Username is already taken.');
         	});
 
+        	socket.on('addToList', function (users) {
+        		$('#users').html('<b>Users<br></b>');
+        		for (var username in users) {
+        			$('#users').append('<b> ' + username + ' </b><br>');
+        		}
+        	});
+
         	socket.on('disconnect', function(){ $('#status').html('Disconnected from Server'); });
-        	socket.on('reconnecting', function( nextRetry ){ $('#status').html('Reconnecting in ' + nextRetry + ' milliseconds');  });
+        	socket.on('reconnecting', function( nextRetry ){ $('#status').html('Reconnecting in ' + nextRetry + ' milliseconds'); });
         	socket.on('reconnect_failed', function(){ $('#status').html('Reconnect Failed'); });
 		}
 		
@@ -53,6 +67,7 @@
 	<input id='username' class='username'></input><br class='username'>
 	<button id="connect" onClick='connect()'/>Connect</button>
 	<button id="disconnect" onClick='disconnect()'>Disconnect</button><br><br>
+	<div id="users" style='float: right'><b>Users<br></b></div>
 	<input id="message"></input>
 	<button id="send" onClick='send()'/>Send Message</button>
 	<br>
